@@ -1,0 +1,48 @@
+# Elasticsearch Configuration
+
+cluster.name: retail-analytics-cluster
+node.name: es-node-1
+
+# Network
+network.host: 0.0.0.0
+http.port: 9200
+transport.port: 9300
+
+# Discovery
+discovery.type: single-node
+
+# Memory
+bootstrap.memory_lock: false
+
+# Security
+xpack.security.enabled: false
+xpack.security.enrollment.enabled: false
+xpack.security.http.ssl.enabled: false
+xpack.security.transport.ssl.enabled: false
+
+# Monitoring
+xpack.monitoring.collection.enabled: true
+
+# Index settings
+action.auto_create_index: true
+action.destructive_requires_name: true
+
+# Performance
+indices.memory.index_buffer_size: 30%
+indices.queries.cache.size: 10%
+indices.fielddata.cache.size: 20%
+
+# Thread pools
+thread_pool:
+  write:
+    size: 30
+    queue_size: 1000
+  search:
+    size: 30
+    queue_size: 1000
+
+# Indexing settings
+index:
+  refresh_interval: 5s
+  number_of_shards: 1
+  number_of_replicas: 0
