@@ -35,12 +35,12 @@ def get_realtime_revenue():
         query = {
             "query": {
                 "range": {
-                    "window.start": {
+                    "WindowStart": {
                         "gte": f"now-{minutes}m"
                     }
                 }
             },
-            "sort": [{"window.start": {"order": "desc"}}],
+            "sort": [{"WindowStart": {"order": "desc"}}],
             "size": 1000
         }
         
@@ -66,7 +66,7 @@ def get_top_products():
         query = {
             "query": {
                 "range": {
-                    "window.start": {
+                    "WindowStart": {
                         "gte": "now-10m"
                     }
                 }
@@ -112,6 +112,25 @@ def get_product_forecast(stock_code):
         
     except Exception as e:
         logger.error(f"Error fetching forecast: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/forecast/all', methods=['GET'])
+def get_all_forecasts():
+    """Get all forecast data (for dashboard)"""
+    try:
+        query = {
+            "query": {"match_all": {}},
+            "size": 10000
+        }
+        df = es_client.search_to_dataframe('retail_demand_forecasts', query)
+        return jsonify({
+            'success': True,
+            'data': df.to_dict('records'),
+            'count': len(df)
+        })
+    except Exception as e:
+        logger.error(f"Error fetching all forecasts: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -202,6 +221,25 @@ def get_customer_segments():
         
     except Exception as e:
         logger.error(f"Error fetching segments: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/inventory/safety_stock/all', methods=['GET'])
+def get_all_safety_stock():
+    """Get all safety stock data (for dashboard)"""
+    try:
+        query = {
+            "query": {"match_all": {}},
+            "size": 10000
+        }
+        df = es_client.search_to_dataframe('retail_safety_stock', query)
+        return jsonify({
+            'success': True,
+            'data': df.to_dict('records'),
+            'count': len(df)
+        })
+    except Exception as e:
+        logger.error(f"Error fetching all safety stock: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 

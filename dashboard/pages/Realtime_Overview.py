@@ -4,7 +4,7 @@ Real-time Overview Dashboard Page
 import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
-from elasticsearch import Elasticsearch
+import requests
 import pandas as pd
 from datetime import datetime, timedelta
 import sys
@@ -14,12 +14,8 @@ from components.metrics import display_kpi_row, format_currency, format_number
 
 st.set_page_config(page_title="Real-time Overview", page_icon="📊", layout="wide")
 
-# Initialize ES
-@st.cache_resource
-def get_es_client():
-    return Elasticsearch(['http://localhost:9200'])
-
-es = get_es_client()
+# API Base URL
+API_BASE_URL = "http://localhost:5000/api"
 
 # Header
 st.title("📊 Real-time Analytics Dashboard")
@@ -30,48 +26,42 @@ col1, col2, col3 = st.columns([2, 1, 1])
 with col1:
     st.subheader("Live Metrics")
 with col2:
-    auto_refresh = st.checkbox("Auto-refresh (30s)", value=False)
+    # auto_refresh = st.checkbox("Auto-refresh (30s)", value=False) # Tạm thời vô hiệu hóa do time.sleep()
+    pass
 with col3:
     if st.button("🔄 Refresh Now"):
         st.cache_data.clear()
+        st.rerun()
 
-# Auto refresh
-if auto_refresh:
-    st.empty()
-    import time
-    time.sleep(30)
-    st.rerun()
+# Auto refresh logic (time.sleep) đã bị xóa vì nó làm treo ứng dụng.
+# @st.cache_data(ttl=30) sẽ tự động làm mới dữ liệu sau 30 giây
+# khi người dùng nhấn nút "Refresh Now".
 
 # Fetch real-time data
 @st.cache_data(ttl=30)
 def fetch_realtime_revenue():
-    query = {
-        "query": {"range": {"window.start": {"gte": "now-15m"}}},
-        "size": 1000,
-        "sort": [{"window.start": {"order": "desc"}}]
-    }
-    
     try:
-        response = es.search(index="retail_realtime_revenue", body=query)
-        hits = response['hits']['hits']
-        data = [hit['_source'] for hit in hits]
-        return pd.DataFrame(data)
-    except:
+        response = requests.get(f"{API_BASE_URL}/realtime/revenue?minutes=15")
+        response.raise_for_status()  # Báo lỗi nếu request thất bại
+        data = response.json()
+        if data.get('success'):
+            return pd.DataFrame(data['data'])
+        return pd.DataFrame()
+    except requests.exceptions.RequestException as e:
+        st.error(f"Lỗi khi gọi API Doanh thu: {e}")
         return pd.DataFrame()
 
 @st.cache_data(ttl=30)
 def fetch_top_products():
-    query = {
-        "query": {"range": {"window.start": {"gte": "now-10m"}}},
-        "size": 100
-    }
-    
     try:
-        response = es.search(index="retail_realtime_products", body=query)
-        hits = response['hits']['hits']
-        data = [hit['_source'] for hit in hits]
-        return pd.DataFrame(data)
-    except:
+        response = requests.get(f"{API_BASE_URL}/realtime/products?limit=100")
+        response.raise_for_status()
+        data = response.json()
+        if data.get('success'):
+            return pd.DataFrame(data['data'])
+        return pd.DataFrame()
+    except requests.exceptions.RequestException as e:
+        st.error(f"Lỗi khi gọi API Sản phẩm: {e}")
         return pd.DataFrame()
 
 df_revenue = fetch_realtime_revenue()
@@ -122,15 +112,15 @@ if not df_revenue.empty:
         
         # Prepare data
         df_plot = df_revenue.copy()
-        if 'window' in df_plot.columns:
-            df_plot['window_start'] = pd.to_datetime(
-                df_plot['window'].apply(lambda x: x.get('start') if isinstance(x, dict) else None)
-            )
-        df_plot = df_plot.sort_values('window_start')
+        # Sửa lỗi logic: Cột bây giờ là 'WindowStart', không phải 'window'
+        if 'WindowStart' in df_plot.columns:
+            # Sửa lỗi: Chỉ định đơn vị là 'ms' (milliseconds)
+            df_plot['WindowStart'] = pd.to_datetime(df_plot['WindowStart'], unit='ms')
+            df_plot = df_plot.sort_values('WindowStart')
         
         fig = create_revenue_timeseries(
             df_plot,
-            'window_start',
+            'WindowStart',
             'TotalRevenue',
             title='Revenue per Minute (Last 15 minutes)'
         )

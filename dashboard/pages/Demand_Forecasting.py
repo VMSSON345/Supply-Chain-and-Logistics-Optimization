@@ -3,7 +3,7 @@ Demand Forecasting Dashboard Page
 """
 import streamlit as st
 import plotly.graph_objects as go
-from elasticsearch import Elasticsearch
+import requests
 import pandas as pd
 from datetime import datetime
 import sys
@@ -13,12 +13,8 @@ from components.metrics import display_kpi_card, format_number
 
 st.set_page_config(page_title="Demand Forecasting", page_icon="📈", layout="wide")
 
-# Initialize ES
-@st.cache_resource
-def get_es_client():
-    return Elasticsearch(['http://localhost:9200'])
-
-es = get_es_client()
+# API Base URL
+API_BASE_URL = "http://localhost:5000/api"
 
 # Header
 st.title("📈 Demand Forecasting")
@@ -28,26 +24,28 @@ st.markdown("---")
 # Fetch forecast data
 @st.cache_data(ttl=3600)
 def fetch_forecast_data():
-    query = {"query": {"match_all": {}}, "size": 10000}
-    
     try:
-        response = es.search(index="retail_demand_forecasts", body=query)
-        hits = response['hits']['hits']
-        data = [hit['_source'] for hit in hits]
-        return pd.DataFrame(data)
-    except:
+        response = requests.get(f"{API_BASE_URL}/forecast/all")
+        response.raise_for_status()
+        data = response.json()
+        if data.get('success'):
+            return pd.DataFrame(data['data'])
+        return pd.DataFrame()
+    except requests.exceptions.RequestException as e:
+        st.error(f"Lỗi khi gọi API Forecast: {e}")
         return pd.DataFrame()
 
 @st.cache_data(ttl=3600)
 def fetch_safety_stock():
-    query = {"query": {"match_all": {}}, "size": 1000}
-    
     try:
-        response = es.search(index="retail_safety_stock", body=query)
-        hits = response['hits']['hits']
-        data = [hit['_source'] for hit in hits]
-        return pd.DataFrame(data)
-    except:
+        response = requests.get(f"{API_BASE_URL}/inventory/safety_stock/all")
+        response.raise_for_status()
+        data = response.json()
+        if data.get('success'):
+            return pd.DataFrame(data['data'])
+        return pd.DataFrame()
+    except requests.exceptions.RequestException as e:
+        st.error(f"Lỗi khi gọi API Safety Stock: {e}")
         return pd.DataFrame()
 
 df_forecast = fetch_forecast_data()

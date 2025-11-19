@@ -132,32 +132,29 @@ class ElasticsearchClient:
         documents = df.to_dict('records')
         return self.bulk_index(index_name, documents, id_field)
     
-    def search(self, index_name: str, query: dict, size: int = 100) -> dict:
+    def search(self, index_name: str, query: dict) -> dict:
         """
         Search documents
         
         Args:
             index_name: Index name
-            query: ES query DSL
-            size: Number of results
+            query: ES query DSL (đã bao gồm 'size')
         """
         try:
             response = self.client.search(
                 index=index_name,
-                body=query,
-                size=size
+                body=query
             )
             return response
         except Exception as e:
             logger.error(f"Error searching index '{index_name}': {e}")
             return {}
     
-    def search_to_dataframe(self, index_name: str, query: dict, 
-                           size: int = 10000) -> pd.DataFrame:
+    def search_to_dataframe(self, index_name: str, query: dict) -> pd.DataFrame:
         """
         Search và convert results to DataFrame
         """
-        response = self.search(index_name, query, size)
+        response = self.search(index_name, query)
         
         if 'hits' in response and 'hits' in response['hits']:
             hits = response['hits']['hits']

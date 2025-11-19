@@ -4,7 +4,7 @@ Market Basket Analysis Dashboard Page
 import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
-from elasticsearch import Elasticsearch
+import requests
 import pandas as pd
 import networkx as nx
 from datetime import datetime
@@ -13,12 +13,8 @@ sys.path.append('..')
 
 st.set_page_config(page_title="Market Basket Analysis", page_icon="🛒", layout="wide")
 
-# Initialize ES
-@st.cache_resource
-def get_es_client():
-    return Elasticsearch(['http://localhost:9200'])
-
-es = get_es_client()
+# API Base URL
+API_BASE_URL = "http://localhost:5000/api"
 
 # Header
 st.title("🛒 Market Basket Analysis")
@@ -28,18 +24,16 @@ st.markdown("---")
 # Fetch association rules
 @st.cache_data(ttl=3600)
 def fetch_association_rules():
-    query = {
-        "query": {"match_all": {}},
-        "size": 1000,
-        "sort": [{"lift": {"order": "desc"}}]
-    }
-    
     try:
-        response = es.search(index="retail_association_rules", body=query)
-        hits = response['hits']['hits']
-        data = [hit['_source'] for hit in hits]
-        return pd.DataFrame(data)
-    except:
+        # Lấy các tham số từ API, limit=1000
+        response = requests.get(f"{API_BASE_URL}/association/rules?limit=1000&min_lift=1")
+        response.raise_for_status()
+        data = response.json()
+        if data.get('success'):
+            return pd.DataFrame(data['data'])
+        return pd.DataFrame()
+    except requests.exceptions.RequestException as e:
+        st.error(f"Lỗi khi gọi API Association Rules: {e}")
         return pd.DataFrame()
 
 df_rules = fetch_association_rules()

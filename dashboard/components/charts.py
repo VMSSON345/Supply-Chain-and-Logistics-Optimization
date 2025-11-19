@@ -10,7 +10,8 @@ import pandas as pd
 def create_revenue_timeseries(df: pd.DataFrame, x_col: str, y_col: str, 
                               title: str = "Revenue Over Time"):
     """Create revenue time series chart"""
-    fig = px.line(
+    # Đổi sang px.area
+    fig = px.area(
         df,
         x=x_col,
         y=y_col,
