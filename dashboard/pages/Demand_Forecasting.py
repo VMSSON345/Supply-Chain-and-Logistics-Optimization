@@ -202,49 +202,64 @@ else:
 st.markdown("---")
 
 # Comparison with other products
-st.subheader("📊 Demand Comparison")
+st.subheader("📊 Demand Comparison (Top 10)")
 
-# Get top 5 products by forecast
-top_products = df_forecast.groupby('StockCode')['ForecastQuantity'].sum().nlargest(10).index.tolist()
+# 1. Tính toán Aggregation cho TẤT CẢ sản phẩm trước
+agg_df = df_forecast.groupby('StockCode')['ForecastQuantity'].agg(
+    Total_Forecast='sum',
+    Peak_Demand='max'
+).reset_index()
 
-if selected_product not in top_products:
-    top_products.append(selected_product)
+# 2. Lấy Top 10 sản phẩm cao nhất
+top_10_df = agg_df.nlargest(10, 'Total_Forecast').sort_values('Total_Forecast', ascending=False)
 
-comparison_data = []
-for product in top_products[:10]:
-    product_data = df_forecast[df_forecast['StockCode'] == product]
-    comparison_data.append({
-        'Product': product,
-        'Total Forecast': product_data['ForecastQuantity'].sum(),
-        'Avg Daily': product_data['ForecastQuantity'].mean(),
-        'Peak': product_data['ForecastQuantity'].max()
-    })
-
-comparison_df = pd.DataFrame(comparison_data)
-comparison_df = comparison_df.sort_values('Total Forecast', ascending=False)
+# (Tùy chọn) Nếu muốn luôn hiển thị sản phẩm đang chọn để so sánh
+if selected_product not in top_10_df['StockCode'].values:
+    selected_row = agg_df[agg_df['StockCode'] == selected_product]
+    if not selected_row.empty:
+        # Thêm vào cuối nếu chưa có
+        top_10_df = pd.concat([top_10_df.iloc[:9], selected_row])
 
 fig = go.Figure()
 
+# Cột Total Forecast
 fig.add_trace(go.Bar(
-    name='Total Forecast',
-    x=comparison_df['Product'],
-    y=comparison_df['Total Forecast'],
-    marker_color='lightblue'
+    name='Total Forecast (30 Days)',
+    x=top_10_df['StockCode'],
+    y=top_10_df['Total_Forecast'],
+    marker_color='#00B4D8',  # Cyan Neon
+    text=top_10_df['Total_Forecast'].apply(lambda x: f"{x:,.0f}"),
+    textposition='auto'
 ))
 
+# Cột Peak Demand
 fig.add_trace(go.Bar(
-    name='Peak Demand',
-    x=comparison_df['Product'],
-    y=comparison_df['Peak'],
-    marker_color='darkblue'
+    name='Peak Daily Demand',
+    x=top_10_df['StockCode'],
+    y=top_10_df['Peak_Demand'],
+    marker_color='#7209B7',  # Purple Neon
+    text=top_10_df['Peak_Demand'].apply(lambda x: f"{x:,.0f}"),
+    textposition='auto'
 ))
 
 fig.update_layout(
-    title='Demand Comparison - Top Products',
-    xaxis_title='Product Code',
-    yaxis_title='Quantity',
-    barmode='group',
-    height=400
+    title=dict(text='Top 10 Products by Predicted Demand', font=dict(color='#E0E0E0')),
+    xaxis=dict(
+        title='Product Code',
+        type='category',  # [QUAN TRỌNG] Ép kiểu category để không bị dồn cột
+        gridcolor='#333333',
+        color='#E0E0E0'
+    ),
+    yaxis=dict(
+        title='Quantity',
+        gridcolor='#333333',
+        color='#E0E0E0'
+    ),
+    barmode='group',  # Nhóm 2 cột lại gần nhau
+    height=500,
+    plot_bgcolor='rgba(0,0,0,0)',
+    paper_bgcolor='rgba(0,0,0,0)',
+    legend=dict(font=dict(color='#E0E0E0'))
 )
 
 st.plotly_chart(fig, width='stretch')

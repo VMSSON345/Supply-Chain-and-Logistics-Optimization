@@ -10,8 +10,8 @@ import pandas as pd
 def create_revenue_timeseries(df: pd.DataFrame, x_col: str, y_col: str, 
                               title: str = "Revenue Over Time"):
     """Create revenue time series chart"""
-    # Đổi sang px.area
-    fig = px.area(
+    # Đổi sang px.bar (Biểu đồ thanh)
+    fig = px.bar(
         df,
         x=x_col,
         y=y_col,
@@ -20,18 +20,26 @@ def create_revenue_timeseries(df: pd.DataFrame, x_col: str, y_col: str,
     )
     
     fig.update_traces(
-        line_color='#1f77b4',
-        line_width=3,
+        marker_color='#00B4D8',  # Màu Cyan sáng (nổi bật trên nền tối)
+        marker_line_width=0,
         hovertemplate='<b>Time:</b> %{x}<br><b>Revenue:</b> £%{y:,.2f}<extra></extra>'
     )
     
     fig.update_layout(
         hovermode='x unified',
-        plot_bgcolor='white',
-        paper_bgcolor='white',
-        font=dict(size=12),
-        xaxis=dict(showgrid=True, gridcolor='lightgray'),
-        yaxis=dict(showgrid=True, gridcolor='lightgray')
+        plot_bgcolor='rgba(0,0,0,0)',  # Nền trong suốt
+        paper_bgcolor='rgba(0,0,0,0)',  # Nền trong suốt
+        font=dict(size=12, color='#E0E0E0'),  # Chữ màu trắng sáng
+        xaxis=dict(
+            showgrid=True,
+            gridcolor='#333333',  # Lưới màu xám tối
+            linecolor='#555555'
+        ),
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='#333333',
+            linecolor='#555555'
+        )
     )
     
     return fig
@@ -47,13 +55,16 @@ def create_bar_chart(df: pd.DataFrame, x_col: str, y_col: str,
         title=title,
         orientation=orientation,
         color=y_col if orientation == 'v' else x_col,
-        color_continuous_scale='Blues'
+        color_continuous_scale='Viridis'  # Thang màu xanh-vàng rực rỡ
     )
     
     fig.update_layout(
-        plot_bgcolor='white',
-        paper_bgcolor='white',
-        showlegend=False
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#E0E0E0'),  # Chữ trắng
+        showlegend=False,
+        xaxis=dict(showgrid=False, gridcolor='#333333'),
+        yaxis=dict(showgrid=True, gridcolor='#333333')
     )
     
     return fig
@@ -64,45 +75,63 @@ def create_forecast_chart(df: pd.DataFrame, date_col: str,
                          title: str = "Demand Forecast"):
     """Create forecast chart with confidence interval"""
     fig = go.Figure()
-    
-    # Forecast line
-    fig.add_trace(go.Scatter(
-        x=df[date_col],
-        y=df[forecast_col],
-        mode='lines',
-        name='Forecast',
-        line=dict(color='#1f77b4', width=3)
-    ))
-    
-    # Upper bound
+
+    # 1. Upper bound (Vẽ trước để làm nền)
     fig.add_trace(go.Scatter(
         x=df[date_col],
         y=df[upper_col],
         mode='lines',
-        name='Upper Bound',
         line=dict(width=0),
         showlegend=False,
         hoverinfo='skip'
     ))
     
-    # Lower bound with fill
+    # 2. Lower bound with fill (Tô màu vùng tin cậy)
     fig.add_trace(go.Scatter(
         x=df[date_col],
         y=df[lower_col],
         mode='lines',
-        name='Confidence Interval',
+        name='Uncertainty Range (95%)',
         fill='tonexty',
-        fillcolor='rgba(31, 119, 180, 0.2)',
+        fillcolor='rgba(255, 255, 255, 0.1)',  # Màu trắng mờ nhẹ, sang trọng trên nền tối
         line=dict(width=0)
+    ))
+
+    # 3. Forecast line (Vẽ sau cùng để nổi lên trên)
+    fig.add_trace(go.Scatter(
+        x=df[date_col],
+        y=df[forecast_col],
+        mode='lines+markers',  # Thêm markers để thấy rõ điểm dữ liệu
+        name='Forecast Trend',
+        line=dict(color='#FF9F1C', width=3),  # Màu Cam Neon nổi bật
+        marker=dict(size=6, color='#FF9F1C')
     ))
     
     fig.update_layout(
-        title=title,
-        xaxis_title="Date",
-        yaxis_title="Quantity",
+        title=dict(text=title, font=dict(size=20, color='#E0E0E0')),
+        xaxis=dict(
+            title="Date",
+            showgrid=True,
+            gridcolor='#333333',  # Lưới xám tối
+            color='#E0E0E0'
+        ),
+        yaxis=dict(
+            title="Quantity",
+            showgrid=True,
+            gridcolor='#333333',
+            color='#E0E0E0'
+        ),
         hovermode='x unified',
-        plot_bgcolor='white',
-        paper_bgcolor='white'
+        plot_bgcolor='rgba(0,0,0,0)',  # Nền trong suốt
+        paper_bgcolor='rgba(0,0,0,0)',  # Nền trong suốt
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1,
+            font=dict(color='#E0E0E0')
+        )
     )
     
     return fig

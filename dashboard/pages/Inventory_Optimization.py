@@ -181,20 +181,36 @@ if not df_safety.empty:
     
     top_20 = display_safety.head(20)
     
-    fig = px.bar(
-        top_20,
-        x='StockCode',
-        y='safety_stock',
-        title='Recommended Safety Stock Levels',
-        labels={'safety_stock': 'Safety Stock (units)', 'StockCode': 'Product Code'},
-        color='safety_stock',
-        color_continuous_scale='Reds'
-    )
-    
+    # Chuyển sang go.Figure để tùy biến tốt hơn
+    fig = go.Figure()
+
+    fig.add_trace(go.Bar(
+        x=top_20['StockCode'],
+        y=top_20['safety_stock'],
+        marker_color='#FF5400',  # Neon Orange (Màu cảnh báo/Safety)
+        text=top_20['safety_stock'].apply(lambda x: f"{x:,.0f}"),
+        textposition='auto',
+        name='Safety Stock'
+    ))
+
     fig.update_layout(
-        height=400,
-        showlegend=False,
-        xaxis={'categoryorder':'total descending'}
+        title=dict(text='Recommended Safety Stock Levels (Top 20)', font=dict(color='#E0E0E0')),
+        xaxis=dict(
+            title='Product Code',
+            type='category',  # [QUAN TRỌNG] Ép kiểu category
+            categoryorder='total descending',  # Sắp xếp từ cao xuống thấp
+            gridcolor='#333333',
+            color='#E0E0E0'
+        ),
+        yaxis=dict(
+            title='Safety Stock (units)',
+            gridcolor='#333333',
+            color='#E0E0E0'
+        ),
+        height=500,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        showlegend=False
     )
     
     st.plotly_chart(fig, width='stretch')
@@ -244,19 +260,34 @@ if not df_safety.empty:
             x='safety_stock',
             nbins=30,
             title='Safety Stock Distribution',
-            labels={'safety_stock': 'Safety Stock (units)', 'count': 'Number of Products'},
-            color_discrete_sequence=['#1f77b4']
+            labels={'safety_stock': 'Safety Stock (units)'},
+            color_discrete_sequence=['#FF5400']  # Neon Orange
         )
-        fig.update_layout(showlegend=False)
+        fig.update_traces(marker_line_width=1, marker_line_color="white", opacity=0.8)
+        fig.update_layout(
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#E0E0E0'),
+            xaxis=dict(title='Safety Stock', showgrid=False, gridcolor='#333333'),
+            yaxis=dict(title='Count', showgrid=True, gridcolor='#333333'),
+            showlegend=False
+        )
         st.plotly_chart(fig, width='stretch')
     
     with col2:
         fig = px.box(
             display_safety,
             y='safety_stock',
-            title='Safety Stock Box Plot',
-            labels={'safety_stock': 'Safety Stock (units)'},
-            color_discrete_sequence=['#1f77b4']
+            title='Safety Stock Spread (with Outliers)',
+            points="outliers",  # Chỉ hiện các điểm ngoại lai (đỡ rối)
+            color_discrete_sequence=['#FF5400']  # Neon Orange
+        )
+        fig.update_layout(
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#E0E0E0'),
+            yaxis=dict(title='Safety Stock (units)', showgrid=True, gridcolor='#333333'),
+            xaxis=dict(showticklabels=False)
         )
         st.plotly_chart(fig, width='stretch')
     

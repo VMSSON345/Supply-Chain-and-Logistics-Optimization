@@ -177,13 +177,16 @@ with col1:
             'lift': 'Lift',
             'support': 'Support'
         },
-        color_continuous_scale='Blues'
+        color_continuous_scale='Viridis'
     )
     
     fig.update_layout(
-        xaxis_title="Confidence",
-        yaxis_title="Lift",
-        height=400
+        xaxis=dict(title="Confidence", showgrid=True, gridcolor='#333333', color='#E0E0E0'),
+        yaxis=dict(title="Lift", showgrid=True, gridcolor='#333333', color='#E0E0E0'),
+        height=400,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#E0E0E0')
     )
     
     st.plotly_chart(fig, width='stretch')
@@ -196,14 +199,18 @@ with col2:
         x='lift',
         nbins=30,
         labels={'lift': 'Lift', 'count': 'Frequency'},
-        color_discrete_sequence=['#1f77b4']
+        color_discrete_sequence=['#F72585']
     )
+    fig.update_traces(marker_line_width=1, marker_line_color="white", opacity=0.8)
     
     fig.update_layout(
-        xaxis_title="Lift",
-        yaxis_title="Number of Rules",
+        xaxis=dict(title="Lift", showgrid=False, gridcolor='#333333', color='#E0E0E0'),
+        yaxis=dict(title="Number of Rules", showgrid=True, gridcolor='#333333', color='#E0E0E0'),
         height=400,
-        showlegend=False
+        showlegend=False,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#E0E0E0')
     )
     
     st.plotly_chart(fig, width='stretch')
@@ -309,8 +316,12 @@ if search_product:
             xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
             yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
             height=500,
-            plot_bgcolor='white'
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#E0E0E0')
         )
+        # Update node colors
+        node_trace.marker.color = '#F72585'
         
         st.plotly_chart(fig, width='stretch')
         
@@ -320,38 +331,55 @@ if search_product:
 st.markdown("---")
 
 # Top Product Pairs
-st.subheader("🏆 Top Product Combinations")
+st.subheader("🏆 Top 10 Strongest Rules (Lift & Confidence)")
 
-top_pairs = filtered_rules.nlargest(10, 'lift')
+# 1. Lấy Top 10 rules
+top_pairs = filtered_rules.nlargest(10, 'lift').copy()
 
-fig = go.Figure()
-
-fig.add_trace(go.Bar(
-    name='Confidence',
-    x=top_pairs['antecedent_str'].apply(lambda x: x[:20]),
-    y=top_pairs['confidence'],
-    marker_color='lightblue'
-))
-
-fig.add_trace(go.Scatter(
-    name='Lift',
-    x=top_pairs['antecedent_str'].apply(lambda x: x[:20]),
-    y=top_pairs['lift'],
-    mode='lines+markers',
-    marker=dict(size=10, color='red'),
-    yaxis='y2'
-))
-
-fig.update_layout(
-    title='Top 10 Rules: Confidence and Lift',
-    xaxis_title='Product Combination',
-    yaxis=dict(title='Confidence', side='left'),
-    yaxis2=dict(title='Lift', overlaying='y', side='right'),
-    height=400,
-    hovermode='x unified'
+# 2. Tạo tên Rule dễ đọc hơn cho biểu đồ
+# Cắt ngắn tên sản phẩm nếu quá dài để biểu đồ không bị vỡ
+top_pairs['Rule_Name'] = (
+    top_pairs['antecedent_str'].apply(lambda x: x[:25] + '...' if len(str(x))>25 else str(x)) +
+    " ➡ " +
+    top_pairs['consequent_str'].apply(lambda x: x[:25] + '...' if len(str(x))>25 else str(x))
 )
 
-st.plotly_chart(fig, width='stretch')
+# 3. Sắp xếp để hiển thị cái mạnh nhất lên đầu
+top_pairs = top_pairs.sort_values('lift', ascending=True)
+
+# 4. Vẽ biểu đồ Horizontal Bar
+fig = px.bar(
+    top_pairs,
+    x='lift',
+    y='Rule_Name',
+    color='confidence',  # Màu sắc thể hiện Confidence
+    orientation='h',  # Biểu đồ ngang
+    text='lift',  # Hiển thị giá trị Lift ngay trên cột
+    title='Top Rules by Lift (Length) and Confidence (Color)',
+    labels={
+        'lift': 'Lift (How much more likely?)',
+        'Rule_Name': 'Product Rule (If -> Then)',
+        'confidence': 'Confidence'
+    },
+    color_continuous_scale='Viridis'  # Thang màu nổi bật
+)
+
+fig.update_traces(
+    texttemplate='%{text:.2f}x',  # Format số Lift (ví dụ: 5.20x)
+    textposition='outside'
+)
+
+fig.update_layout(
+    height=500,
+    plot_bgcolor='rgba(0,0,0,0)',
+    paper_bgcolor='rgba(0,0,0,0)',
+    font=dict(color='#E0E0E0'),
+    xaxis=dict(showgrid=True, gridcolor='#333333'),
+    yaxis=dict(showgrid=False),
+    coloraxis_colorbar=dict(title="Confidence")
+)
+
+st.plotly_chart(fig, use_container_width=True)
 
 # Insights
 st.markdown("---")
