@@ -1,44 +1,56 @@
-# 🛒 Retail Analytics Big Data System
+#  Retail Analytics Big Data System
 
 A complete Lambda Architecture implementation for retail data analytics using Apache Spark, Kafka, Elasticsearch, and Streamlit.
 
-## 📋 Overview
+##  Overview
 
 This project implements a comprehensive retail analytics system that processes transactional data using both batch and real-time processing to provide:
 
-- 📊 Real-time revenue and sales metrics
-- 📈 30-day demand forecasting
-- 🛒 Market basket analysis (association rules)
-- 📦 Inventory optimization
-- 👥 Customer segmentation
+-  Real-time revenue and sales metrics
+-  30-day demand forecasting
+-  Market basket analysis (association rules)
+-  Inventory optimization
+-  Customer segmentation
 
-## 🏗️ Architecture
+##  Architecture
 
+<div align="center">
+  <img src="architecture.png" alt="System Architecture Diagram" width="800"/>
+</div>
+
+The system follows a Lambda Architecture pattern with three layers:
+
+1. **Batch Layer**: Processes historical data for ML models and analytics
+2. **Speed Layer**: Handles real-time streaming data for immediate insights
+3. **Serving Layer**: Provides unified access to both batch and real-time results
+
+### Data Flow
+
+```
 ┌─────────────┐
 │ Data Source │ UCI Online Retail Dataset
 └──────┬──────┘
-│
-├──────────────┬─────────────────┐
-│ │ │
-┌───▼────┐ ┌────▼─────┐ ┌─────▼────┐
-│ Kafka │ │ HDFS/S3 │ │ Batch │
-└───┬────┘ └────┬─────┘ │Processing│
-│ │ └─────┬────┘
-│ │ │
-┌───▼─────┐ ┌───▼──────┐ ┌─────▼─────┐
-│ Spark │ │ Spark │ │ ES │
-│Streaming│ │ Batch │ │ Serving │
-└───┬─────┘ └────┬─────┘ └─────┬─────┘
-│ │ │
-└─────────────┴────────────────┤
-│
-┌─────────▼──────────┐
-│ Streamlit Dashboard│
-└────────────────────┘
+       │
+       ├──────────────┬─────────────────┐
+       │              │                 │
+   ┌───▼────┐    ┌────▼─────┐    ┌─────▼────┐
+   │ Kafka  │    │ HDFS/S3  │    │  Batch   │
+   │Stream  │    │  Storage │    │Processing│
+   └───┬────┘    └────┬─────┘    └─────┬────┘
+       │              │                 │
+   ┌───▼─────┐   ┌───▼──────┐    ┌─────▼─────┐
+   │ Spark   │   │  Spark   │    │    ES     │
+   │Streaming│   │  Batch   │    │  Serving  │
+   └───┬─────┘   └────┬─────┘    └─────┬─────┘
+       │              │                 │
+       └──────────────┴─────────────────┤
+                                        │
+                            ┌───────────▼──────────┐
+                            │ Streamlit Dashboard  │
+                            └─────────────────────┘
+```
 
-text
-
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 
@@ -49,188 +61,338 @@ text
 
 ### Installation
 
-1. Clone repository
-   git clone https://github.com/your-repo/retail-analytics-bigdata.git
-   cd retail-analytics-bigdata
+1. **Clone repository**
+   ```bash
+   git clone https://github.com/your-repo/Supply-Chain-and-Logistics-Optimization.git
+   cd Supply-Chain-and-Logistics-Optimization
+   ```
 
-2. Run setup script
+2. **Run setup script**
+   ```bash
    chmod +x scripts/setup_environment.sh
    ./scripts/setup_environment.sh
+   ```
 
-3. Download dataset
+3. **Download dataset**
+   ```bash
    chmod +x scripts/download_data.sh
    ./scripts/download_data.sh
+   ```
+   
+   Or use the provided `Online Retail.xlsx` file and convert it to CSV format.
 
-4. Initialize Elasticsearch
+4. **Initialize Elasticsearch**
+   ```bash
    python scripts/init_elasticsearch.py
-
-text
+   ```
 
 ### Running the System
 
-1. Start infrastructure
+1. **Start infrastructure**
+   ```bash
    docker-compose up -d
+   ```
 
-2. Run batch processing jobs
+2. **Verify services are running**
+   ```bash
+   chmod +x scripts/check_services.sh
+   ./scripts/check_services.sh
+   ```
+
+3. **Run batch processing jobs**
+   ```bash
    chmod +x scripts/run_batch_jobs.sh
    ./scripts/run_batch_jobs.sh
+   ```
 
-3. Start data simulator
-   python src/ingestion/kafka_producer.py
-   --csv data/raw/online_retail.csv
-   --speed 10.0
+4. **Start data simulator (Kafka Producer)**
+   ```bash
+   python src/ingestion/kafka_producer.py \
+     --csv data/raw/online_retail.csv \
+     --speed 10.0
+   ```
 
-4. Start streaming processor
-   docker exec -it spark-master spark-submit
-   --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0
-   /opt/spark-apps/speed_layer/streaming_processor.py
+5. **Start streaming processor**
+   ```bash
+   docker exec -it spark-master spark-submit \
+     --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0 \
+     /opt/spark-apps/speed_layer/streaming_processor.py
+   ```
 
-5. Launch dashboard
+6. **Launch dashboard**
+   ```bash
    streamlit run dashboard/app.py
+   ```
 
-text
-
-## 📊 Dashboard
+##  Dashboard
 
 Access the dashboard at: `http://localhost:8501`
 
 ### Features
 
-1. **Real-time Overview**
-
+1. **Real-time Overview** (`Realtime_Overview.py`)
    - Live revenue metrics
    - Top selling products
    - Country-wise distribution
+   - Transaction volume trends
 
-2. **Demand Forecasting**
-
+2. **Demand Forecasting** (`Demand_Forecasting.py`)
    - 30-day predictions per product
    - Confidence intervals
+   - Historical vs predicted comparison
    - Export capabilities
 
-3. **Market Basket Analysis**
-
-   - Association rules
+3. **Market Basket Analysis** (`Market_Basket.py`)
+   - Association rules mining
    - Product recommendations
    - Network visualization
+   - Support and confidence metrics
 
-4. **Inventory Optimization**
+4. **Inventory Optimization** (`Inventory_Optimization.py`)
    - Safety stock calculations
    - Real-time alerts
    - Reorder point recommendations
+   - Stock level monitoring
 
-## 🛠️ Technology Stack
+##  Technology Stack
 
-- **Data Ingestion:** Apache Kafka
+- **Data Ingestion:** Apache Kafka, Zookeeper
 - **Stream Processing:** Spark Structured Streaming
 - **Batch Processing:** Apache Spark (PySpark)
 - **Machine Learning:** Spark MLlib, Prophet
-- **Storage:** HDFS, Elasticsearch
+- **Storage:** Elasticsearch, Local File System
 - **Visualization:** Streamlit, Plotly
 - **Orchestration:** Docker Compose
+- **Monitoring:** Grafana, Kibana
 
-## 📁 Project Structure
+##  Project Structure
 
-retail-analytics-bigdata/
-├── config/ # Configuration files
-├── data/ # Data directory
-├── dashboard/ # Streamlit dashboard
-├── scripts/ # Setup scripts
-├── src/
-│ ├── batch_layer/ # Batch processing jobs
-│ ├── speed_layer/ # Streaming jobs
-│ ├── serving_layer/ # API & ES client
-│ ├── ingestion/ # Data producers
-│ └── utils/ # Utilities
-├── tests/ # Unit tests
-├── docker-compose.yml
+```
+SUPPLY-CHAIN-AND-LOGISTICS-OPTIMIZATION/
+│
+├── README.md
+├── LICENSE
+├── contributing.md
+├── Makefile
 ├── requirements.txt
-└── README.md
+├── docker-compose.yml
+├── Online Retail.xlsx
+├── architechture.png
+├── model_testing_finally.ipynb
+│
+├── config/
+│   ├── config.yaml
+│   ├── spark-defaults.conf
+│   ├── elasticsearch.yml
+│   └── kafka-config.properties
+│
+├── data/
+│   ├── raw/
+│   │   └── online_retail.csv
+│   ├── processed/
+│   └── checkpoints/
+│
+├── scripts/
+│   ├── setup_environment.sh
+│   ├── download_data.sh
+│   ├── init_elasticsearch.py
+│   ├── run_batch_jobs.sh
+│   ├── check_services.sh
+│   └── monitor_streaming.sh
+│
+├── spark_docker/
+│   └── Dockerfile
+│
+├── src/
+│   ├── __init__.py
+│   │
+│   ├── ingestion/
+│   │   ├── __init__.py
+│   │   ├── data_simulator.py
+│   │   └── kafka_producer.py
+│   │
+│   ├── batch_layer/
+│   │   ├── __init__.py
+│   │   ├── data_preprocessing.py
+│   │   ├── association_rules.py
+│   │   ├── demand_forecasting.py
+│   │   ├── customer_segmentation.py
+│   │   └── batch_job_runner.py
+│   │
+│   ├── speed_layer/
+│   │   ├── __init__.py
+│   │   ├── streaming_processor.py
+│   │   ├── realtime_metrics.py
+│   │   └── inventory_alerts.py
+│   │
+│   ├── serving_layer/
+│   │   ├── __init__.py
+│   │   ├── elasticsearch_client.py
+│   │   └── api_service.py
+│   │
+│   └── utils/
+│       ├── __init__.py
+│       ├── config_loader.py
+│       ├── logger.py
+│       └── data_validator.py
+│
+├── dashboard/
+│   ├── app.py
+│   │
+│   ├── pages/
+│   │   ├── Realtime_Overview.py
+│   │   ├── Demand_Forecasting.py
+│   │   ├── Market_Basket.py
+│   │   └── Inventory_Optimization.py
+│   │
+│   ├── components/
+│   │   ├── __init__.py
+│   │   ├── charts.py
+│   │   └── metrics.py
+│   │
+│   └── assets/
+│       └── style.css
+│
+└── tests/
+    ├── __init__.py
+    ├── test_batch_processing.py
+    ├── test_streaming.py
+    └── test_api.py
+```
 
-text
+##  Testing
 
-## 🧪 Testing
-
-Run all tests
+Run all tests:
+```bash
 python -m pytest tests/
+```
 
-Run specific test
+Run specific test:
+```bash
 python tests/test_batch_processing.py
+python tests/test_streaming.py
+python tests/test_api.py
+```
 
-text
-
-## 📈 Performance
+##  Performance
 
 - **Batch Processing:** ~1M records in 30 minutes
 - **Stream Processing:** ~10K records/second
 - **Dashboard Latency:** <2 seconds
 - **ES Query Time:** <100ms
 
-## 🔧 Configuration
+##  Configuration
 
 Edit `config/config.yaml` to customize:
 
-- Spark resources
-- Kafka topics
-- ES indices
-- Algorithm parameters
-- Alert thresholds
+- Spark resources (memory, cores, partitions)
+- Kafka topics and consumer groups
+- Elasticsearch indices and settings
+- Algorithm parameters (support, confidence, forecasting periods)
+- Alert thresholds (stock levels, demand spikes)
 
-## 🐛 Troubleshooting
+### Key Configuration Files
+
+- `config/config.yaml` - Main application configuration
+- `config/spark-defaults.conf` - Spark cluster settings
+- `config/elasticsearch.yml` - Elasticsearch configuration
+- `config/kafka-config.properties` - Kafka producer/consumer settings
+
+##  Troubleshooting
 
 ### Services not starting
 
-Check Docker logs
+Check Docker logs:
+```bash
 docker-compose logs -f [service-name]
+```
 
-Restart services
+Restart services:
+```bash
 docker-compose restart
-
-text
+```
 
 ### Elasticsearch connection issues
 
-Check ES health
-curl http://localhost:9200/\_cluster/health
+Check ES health:
+```bash
+curl http://localhost:9200/_cluster/health
+```
 
-text
+Access Kibana:
+```bash
+open http://localhost:5601
+```
 
 ### Spark job failures
 
-Check Spark UI
+Check Spark UI:
+```bash
 open http://localhost:8080
+```
 
-View executor logs
+View executor logs:
+```bash
 docker exec spark-master ls /opt/spark/work/
+```
 
-text
+### Kafka connection issues
 
-## 📚 Documentation
+Check Kafka topics:
+```bash
+docker exec -it kafka kafka-topics --list --bootstrap-server localhost:9092
+```
 
-- [Architecture Details](docs/ARCHITECTURE.md)
-- [API Reference](docs/API.md)
-- [Deployment Guide](docs/DEPLOYMENT.md)
-- [Tuning Guide](docs/TUNING.md)
+Monitor streaming:
+```bash
+chmod +x scripts/monitor_streaming.sh
+./scripts/monitor_streaming.sh
+```
 
-## 🤝 Contributing
+##  Documentation
 
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md)
+- Architecture diagram: `architechture.png`
+- Model testing notebook: `model_testing_finally.ipynb`
 
-## 📄 License
 
-MIT License - see [LICENSE](LICENSE)
 
-## 👥 Authors
+### Development Workflow
 
-- Your Name - [your-email@example.com]
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## 🙏 Acknowledgments
+##  License
 
-- UCI Machine Learning Repository for the dataset
-- Apache Spark community
-- Streamlit team
+MIT License - see [LICENSE](LICENSE) file for details.
 
-## 📞 Support
+##  Team
 
-- Issues: [GitHub Issues](https://github.com/your-repo/issues)
-- Email: support@example.com
+This project is developed by a team of 3 members:
+
+- Vũ Minh Sơn - 23020424
+- Nguyễn Bá Quang - 23020412
+- Trần Doãn Thắng - 23020438
+
+##  Acknowledgments
+
+- UCI Machine Learning Repository for the Online Retail Dataset
+- Apache Spark community for excellent documentation and support
+- Streamlit team for the amazing dashboard framework
+- Elasticsearch and Kafka communities
+
+
+
+##  Useful Links
+
+- **Spark UI:** http://localhost:8080
+- **Kibana:** http://localhost:5601
+- **Grafana:** http://localhost:3000
+- **Elasticsearch:** http://localhost:9200
+- **Streamlit Dashboard:** http://localhost:8501
+
+---
+
+**Note:** Make sure all Docker containers are running before accessing the services. Use `docker-compose ps` to check the status of all services.
