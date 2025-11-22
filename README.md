@@ -14,9 +14,12 @@ This project implements a comprehensive retail analytics system that processes t
 
 ##  Architecture
 
-<div align="center">
-  <img src="architecture.png" alt="System Architecture Diagram" width="800"/>
-</div>
+<p align = "center">
+<img src="architechture.png" width="100%" alt="" align=center />
+</p>
+<p align = "center">
+  Architechture System.
+</p>
 
 The system follows a Lambda Architecture pattern with three layers:
 
