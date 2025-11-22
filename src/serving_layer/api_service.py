@@ -279,4 +279,5 @@ def get_overview_stats():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Tắt debug mode cho môi trường Production
+    app.run(host='0.0.0.0', port=5000, debug=False)
