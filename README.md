@@ -144,13 +144,7 @@ The system follows a Lambda Architecture pattern with three layers:
    - Start Kafka producer (data simulator)
    - Start Spark streaming processor
 
-5. **Start API Service** (The dashboard communicates via this API layer)
-   ```bash
-   # Open a new terminal
-   python src/serving_layer/api_service.py
-   ```
-
-6. **Launch dashboard**
+5. **Launch dashboard**
    ```bash
    # Open a new terminal
    make dashboard
